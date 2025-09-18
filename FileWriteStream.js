@@ -1,10 +1,18 @@
-const { Writable } = require("node:stream");
+const {Writable} = require("node:stream");
 const fs = require("node:fs");
+const fsasync = require('node:fs/promises')
 module.exports = class FileWriteStream extends Writable {
-  constructor({ highWaterMark, fileName, position, append }) {
+  constructor({
+    highWaterMark,
+    fileName,
+    position,
+    append
+  }) {
 
 
-    super({ highWaterMark });
+    super({
+      highWaterMark
+    });
 
     this.fileName = fileName;
     this.bytesRead = 0
@@ -16,10 +24,26 @@ module.exports = class FileWriteStream extends Writable {
     this.append = append
   }
 
+  async fileSize() {
+    // Open the file and get its size  
+    try {
+      const addContent = await fsasync.open(this.fileName, "r");
+      this.size = (await addContent.stat()).size;
+      await addContent.close();
+    } catch (error) {
+      console.log(error)
+    } finally {
+      console.log('File Size: ', this.size)
+      return this.size
+
+    }
+
+  }
+
   //This will run after the contructor, and it will put off calling all the other
   //methods until we call the callback function
   _construct(callback) {
-    fs.open(this.fileName, "w", (err, fd) => {
+    fs.open(this.fileName, "r+", (err, fd) => {
       console.time('writeMany')
       if (err) {
         //so if we call the callback with an argument, it means that we have an error
@@ -28,7 +52,15 @@ module.exports = class FileWriteStream extends Writable {
       } else {
         //The reference to the file is stored in fd
         this.fd = fd;
-        callback();
+        try {
+          this.fileSize()
+        } catch (error) {
+          console.log(error)
+        } finally {
+          console.log('File Size: ', this.size)
+          callback();
+        }
+
       }
     });
   }
@@ -44,13 +76,13 @@ module.exports = class FileWriteStream extends Writable {
 
     if (this.chunksSize >= this.writableHighWaterMark) {
       console.log("Bytes read: " + this.bytesRead)
+      console.log('Write Position: ', this.postion)
       fs.write(
         this.fd,
         Buffer.concat(this.chunks),
         0,
         Buffer.concat(this.chunks).length,
-        this.position
-        , (error) => {
+        0, (error) => {
           if (error) {
             return callback(error);
           }
@@ -65,7 +97,7 @@ module.exports = class FileWriteStream extends Writable {
   }
 
   _final(callback) {
-    fs.write(this.fd, Buffer.concat(this.chunks), (error) => {
+    fs.write(this.fd, Buffer.concat(this.chunks), 0, Buffer.concat(this.chunks).length, this.postion, (error) => {
       if (error) {
         return callback(error);
       }
@@ -82,7 +114,6 @@ module.exports = class FileWriteStream extends Writable {
 
   _destroy(error) {
     console.log("Number of writes: ", this.writesCount);
-
     if (this.fd) {
       fs.close(this.fd, (err) => {
         console.timeEnd('writeMany')
@@ -90,7 +121,7 @@ module.exports = class FileWriteStream extends Writable {
         // fd.fsync()
         return console.log('Write File Closed')
       });
-      
+
     }
 
   }
