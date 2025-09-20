@@ -41,6 +41,9 @@
           result = result.filter(row => row[searchKeys[key]] == matchingParameter[searchKeys[key]])
       }
       console.log('LAST RUN Result: ', result)
+      if (result.length == 0) {
+          return null
+      }
       return result
   }
 
@@ -67,7 +70,6 @@
               } else {
                   list.push(`"${keys[i]}":${values[i]}`)
               }
-
           }
       }
       console.log('Return As List: ', list)
@@ -78,14 +80,21 @@
       //Returns an array
       const searchKeys = Object.keys(matchingParameter)
       const filteredData = filter(searchKeys, matchingParameter)
-      const itemLocatioin = findItemLocation(returnAsList(filteredData))
-      if (update) {
-          return {
-              'itemlocation': itemLocatioin,
-              'result': returnstruct(filteredData, returnstructure)
+      if (!filteredData) {
+          return null
+      } else {
+          const itemLocatioin = findItemLocation(returnAsList(filteredData))
+          if (update) {
+              return {
+                  'index in file': itemLocatioin,
+                  'length': JSON.stringify(filteredData).trim().length,
+                  'result': returnstruct(filteredData, returnstructure)
+              }
           }
+          return returnstruct(filteredData, returnstructure)
+
       }
-      return returnstruct(filteredData, returnstructure)
+
 
   }
   const fileSize = async () => {
@@ -108,12 +117,16 @@
           return console.error('Error: Unable to append. Duplicate Record Found.');
       } else {
           data.push(record)
-          update(datalength(data), record)
+          write(datalength(data), record)
           console.log('Appended Data: ', data)
       }
+
   }
 
-
+  const update = (currentrecord, newrecord) => {
+      const data = query(currentrecord, Object.keys(currentrecord), true)
+      console.log("UPDATE DATA STRUCTURE: ", data)
+  }
   //NOTE: The partdata should be an array of strings where each unit is key value pair
   //Then each key value pair should looped through and changed in the database as it is found
   const datalength = (data) => {
@@ -122,7 +135,7 @@
       }, 0);
   }
 
-  const update = (position, data) => {
+  const write = (position, data) => {
       fileSize().then((size) => {
           try {
               console.log(`Attempting to open file ${pathlist}`)
@@ -145,19 +158,24 @@
       })
   }
 
-  const queryresult = query({
+  /*const queryresult = query({
       username: "liam23",
       password: "string"
   }, ['username', 'password'], true)
-
-   const appendresult = append({
-        id: 12,
-        name: "Mesfin Deb",
-        username: "mesfin.deb",
-        password: "TODO"
-    })
-    console.log('Append Result: ', appendresult) 
-  console.log("Executed Database: ", queryresult)
+*/
+  const appendresult = update({
+      id: 12,
+      name: "Mesfin Deb",
+      username: "mesfin.deb",
+      password: "TODO"
+  }, {
+      id: 12,
+      name: "Mesfin Deb",
+      username: "mesfin.deb",
+      password: "TODOR"
+  })
+  console.log('Append Result: ', appendresult)
+  //console.log("Executed Database: ", queryresult)
 
 
   let test = Buffer.from("HELLO")

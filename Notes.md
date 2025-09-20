@@ -17,3 +17,6 @@ Redo FileWriteStream so it uses position to do initial writing and everytime it 
 The write stream works, and appends on the proper place. Had to change flag to R+ to append or it will create a null filled file for old items
 ***THINGS TO FIX***(Fixed 09/11/25)
 The append should not work though, since its a copy of an exisiting item
+
+**September 16**
+Update function should be refractored. Should be renamed to write. A new Update function should use the write function to write and the append function should be modified to use
