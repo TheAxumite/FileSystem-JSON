@@ -158,11 +158,11 @@
       })
   }
 
-  /*const queryresult = query({
+  const queryresult = query({
       username: "liam23",
       password: "string"
   }, ['username', 'password'], true)
-*/
+
   const appendresult = update({
       id: 12,
       name: "Mesfin Deb",
