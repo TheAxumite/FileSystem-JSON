@@ -28,8 +28,13 @@
   const findItemLocation = (data) => {
       let location = []
       data.forEach(element => {
-          location.push([element, buffer.indexOf(Buffer.from(element))])
-      });
+          let position = buffer.indexOf(Buffer.from(element))
+          location.push({
+              element,
+              position
+          });
+      })
+
       return location
   }
 
@@ -80,23 +85,22 @@
       //Returns an array
       const searchKeys = Object.keys(matchingParameter)
       const filteredData = filter(searchKeys, matchingParameter)
+      console.log("FILTERDATA: ", filteredData)
       if (!filteredData) {
-          return null
+          return filteredData
       } else {
           const itemLocatioin = findItemLocation(returnAsList(filteredData))
           if (update) {
               return {
-                  'index in file': itemLocatioin,
-                  'length': JSON.stringify(filteredData).trim().length,
-                  'result': returnstruct(filteredData, returnstructure)
+                  indexinfile: itemLocatioin,
+                  length: datalength(filteredData),
+                  result: returnstruct(filteredData, returnstructure)
               }
           }
           return returnstruct(filteredData, returnstructure)
-
       }
-
-
   }
+
   const fileSize = async () => {
       // Open the file and get its size  
       try {
@@ -113,7 +117,7 @@
   }
 
   const append = (record) => {
-      if (query(record).length > 0) {
+      if (!query) {
           return console.error('Error: Unable to append. Duplicate Record Found.');
       } else {
           data.push(record)
@@ -124,21 +128,46 @@
   }
 
   const update = (currentrecord, newrecord) => {
-      const data = query(currentrecord, Object.keys(currentrecord), true)
-      console.log("UPDATE DATA STRUCTURE: ", data)
+      const currentrecstruct = query(currentrecord, Object.keys(currentrecord), true)
+      if (currentrecstruct) {
+
+      }
+      const dhendposition = currentrecstruct.indexinfile[0].position - 2
+      const datahead = Buffer.from(JSON.stringify(data).slice(1, dhendposition).trim())
+      const indexfilelast = currentrecstruct.indexinfile.length - 1
+      const nrendposition = currentrecstruct.length + dhendposition
+      console.log("record being changed end position", nrendposition)
+      const listlen = JSON.stringify(data).slice(nrendposition)
+      console.log("TailEnd", listlen)
+      console.log('DATA: ', data)
+      //const tailend = Buffer.from()
+      console.log('Sliced Data', datahead)
+      //console.log("DATA LENGTH: ", datalength(data))
+      console.log("UPDATE DATA STRUCTURE: ", currentrecstruct)
+
+
+      const newBuffsize = currentrecstruct.indexinfile[0].position
+      console.log("beginning of new buffer ", newBuffsize)
+      const newBuffer = Buffer.alloc(newBuffsize)
+
+
   }
   //NOTE: The partdata should be an array of strings where each unit is key value pair
   //Then each key value pair should looped through and changed in the database as it is found
   const datalength = (data) => {
       const keyLength = data.reduce((accumulator, element, index, array) => {
-          return accumulator + JSON.stringify(element).trim().length; // Accumulator is updated
+          console.log('TRIMMED: ', JSON.stringify(element).trim())
+          return accumulator + JSON.stringify(element).trim().length // Accumulator is updated
       }, 0);
+
+      return keyLength + 2
   }
 
   const write = (position, data) => {
       fileSize().then((size) => {
           try {
               console.log(`Attempting to open file ${pathlist}`)
+              console.log('SIZE of FILE: ', size)
               var fileHandle = new FileWriteStream({
                   fileName: pathlist,
                   position: size - 1
@@ -168,12 +197,7 @@
       name: "Mesfin Deb",
       username: "mesfin.deb",
       password: "TODO"
-  }, {
-      id: 12,
-      name: "Mesfin Deb",
-      username: "mesfin.deb",
-      password: "TODOR"
-  })
+  }, false)
   console.log('Append Result: ', appendresult)
   //console.log("Executed Database: ", queryresult)
 
