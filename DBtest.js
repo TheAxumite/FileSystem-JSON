@@ -81,7 +81,7 @@
       return list
   }
 
-  const query = (matchingParameter, returnstructure, update) => {
+ const query = (matchingParameter, returnstructure, update) => {
       //Returns an array
       const searchKeys = Object.keys(matchingParameter)
       const filteredData = filter(searchKeys, matchingParameter)
@@ -89,12 +89,19 @@
       if (!filteredData) {
           return filteredData
       } else {
-          const itemLocatioin = findItemLocation(returnAsList(filteredData))
+
+          const itemLocatioin = findItemLocation(returnAsList(filteredData));
+          const length = datalength(filteredData);
+          const start = itemLocatioin[0].position - 2;
+          const end = length + start;
+
           if (update) {
               return {
-                  indexinfile: itemLocatioin,
-                  length: datalength(filteredData),
-                  result: returnstruct(filteredData, returnstructure)
+                  jsonstructlocations: itemLocatioin,
+                  length: length, //Length of queried item
+                  start: start, //Start position of matchingParameter in file
+                  end: end, //End position queried item
+                  result: returnstruct(filteredData, returnstructure) // Returned in a list
               }
           }
           return returnstruct(filteredData, returnstructure)
