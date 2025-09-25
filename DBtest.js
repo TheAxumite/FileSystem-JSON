@@ -81,7 +81,7 @@
       return list
   }
 
- const query = (matchingParameter, returnstructure, update) => {
+  const query = (matchingParameter, returnstructure, update) => {
       //Returns an array
       const searchKeys = Object.keys(matchingParameter)
       const filteredData = filter(searchKeys, matchingParameter)
@@ -138,26 +138,29 @@
       const currentrecstruct = query(currentrecord, Object.keys(currentrecord), true)
       if (currentrecstruct) {
 
+          //console.log('Data Structure: ', currentrecstruct);
+          let headbuffer = Buffer.from(JSON.stringify(data).slice(1, currentrecstruct.start).trim())
+          let tailbuffer = null
+          //console.log('HeadBuffer: ', headbuffer)
+          //console.log('Data length: ', data.length)
+          fileSize().then((size) => {
+              if (size > currentrecstruct.end) {
+                  tailbuffer = Buffer.from(JSON.stringify(data).slice(currentrecstruct.end).trim())
+                  const newrecordbuffer = Buffer.from(JSON.stringify(newrecord).trim())
+                  const updatedbuffer = Buffer.concat([headbuffer,newrecordbuffer,tailbuffer])
+                  write(0,updatedbuffer)
+                  //console.log('TailBuffer: ', tailbuffer)
+              } else {
+                  tailbuffer = Buffer.from(newrecord)
+                  //const updated = Buffer.concat()
+              }
+
+
+          })
+
+
+
       }
-      const dhendposition = currentrecstruct.indexinfile[0].position - 2
-      const datahead = Buffer.from(JSON.stringify(data).slice(1, dhendposition).trim())
-      const indexfilelast = currentrecstruct.indexinfile.length - 1
-      const nrendposition = currentrecstruct.length + dhendposition
-      console.log("record being changed end position", nrendposition)
-      const listlen = JSON.stringify(data).slice(nrendposition)
-      console.log("TailEnd", listlen)
-      console.log('DATA: ', data)
-      //const tailend = Buffer.from()
-      console.log('Sliced Data', datahead)
-      //console.log("DATA LENGTH: ", datalength(data))
-      console.log("UPDATE DATA STRUCTURE: ", currentrecstruct)
-
-
-      const newBuffsize = currentrecstruct.indexinfile[0].position
-      console.log("beginning of new buffer ", newBuffsize)
-      const newBuffer = Buffer.alloc(newBuffsize)
-
-
   }
   //NOTE: The partdata should be an array of strings where each unit is key value pair
   //Then each key value pair should looped through and changed in the database as it is found
@@ -177,14 +180,15 @@
               console.log('SIZE of FILE: ', size)
               var fileHandle = new FileWriteStream({
                   fileName: pathlist,
-                  position: size - 1
+                  position: position
               })
           } catch (error) {
               console.log(error)
               return error
           } finally {
               if (fileHandle != undefined) {
-                  fileHandle.write(Buffer.from(`,${JSON.stringify(data)}]`), () => {
+                fileHandle.write(data, ()=>{
+                  //fileHandle.write(Buffer.from(`,${JSON.stringify(data)}]`), () => {
                       console.log('written')
                   })
                   fileHandle.end()
@@ -201,10 +205,14 @@
 
   const appendresult = update({
       id: 12,
+      name: "Leul Dessalegn",
+      username: "leul.dessalegn",
+      password: "string"
+  }, {id: 12,
       name: "Mesfin Deb",
       username: "mesfin.deb",
-      password: "TODO"
-  }, false)
+      password: "TODOR"
+  })
   console.log('Append Result: ', appendresult)
   //console.log("Executed Database: ", queryresult)
 

@@ -43,7 +43,7 @@ module.exports = class FileWriteStream extends Writable {
   //This will run after the contructor, and it will put off calling all the other
   //methods until we call the callback function
   _construct(callback) {
-    fs.open(this.fileName, "r+", (err, fd) => {
+    fs.open(this.fileName, "w", (err, fd) => {
       console.time('writeMany')
       if (err) {
         //so if we call the callback with an argument, it means that we have an error
